@@ -1,0 +1,2 @@
+# Resizinator
+Resize images
