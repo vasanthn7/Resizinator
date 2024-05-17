@@ -14,7 +14,7 @@ ENV POETRY_NO_INTERACTION=1
 RUN pip install poetry==$POETRY_VERSION
 
 # Set work directory
-WORKDIR /resizinator
+WORKDIR /resizinator/resizinator
 
 # Install dependencies
 COPY pyproject.toml poetry.lock ./
