@@ -1,7 +1,11 @@
+from io import BytesIO
+
 import pytest
 
-from django.urls import reverse
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
+from django.urls import reverse
+import PIL.Image
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -14,6 +18,12 @@ class TestImageViewSet(TestCase):
 
     def setUp(self):
         self.image = Image.objects.create(original='test.jpg')
+
+    def temporary_image(self):
+        bts = BytesIO()
+        img = PIL.Image.new("RGB", (100, 100))
+        img.save(bts, 'jpeg')
+        return SimpleUploadedFile("test.jpg", bts.getvalue())
 
     def test_list_image(self):
         url = '/image/'
@@ -31,7 +41,17 @@ class TestImageViewSet(TestCase):
 
     def test_post_image(self):
         url = '/image/'
-        data = {'original': 'test.jpg'}
-        response = self.client.post(url, data)
+        data = {'original': self.temporary_image()}
+        response = self.client.post(url, data=data, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        assert response.data['original'] == 'http://testserver/test.jpg'
+        assert response.data['original'] == 'http://testserver/images/test.jpg'
+
+        # Clean up
+        image = Image.objects.get(id=response.data['id'])
+        image.delete()
+
+    def test_delete_image(self):
+        url = f'/image/{self.image.id}/'
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        assert Image.objects.count() == 0
