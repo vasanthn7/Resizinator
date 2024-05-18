@@ -4,13 +4,10 @@ import pytest
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
-from django.urls import reverse
 import PIL.Image
 from rest_framework import status
-from rest_framework.test import APITestCase
 
 from image.models import Image
-from image.views import ImageViewSet
 
 
 @pytest.mark.django_db

@@ -161,3 +161,6 @@ cython_debug/
 
 # local images
 resizinator/images/
+
+# Editor configurations
+pyrightconfig.json
