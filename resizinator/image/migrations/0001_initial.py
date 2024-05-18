@@ -15,9 +15,9 @@ class Migration(migrations.Migration):
             name='Image',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('original', models.ImageField(upload_to='images/')),
-                ('small', models.ImageField(blank=True, null=True, upload_to='images/')),
-                ('medium', models.ImageField(blank=True, null=True, upload_to='images/')),
+                ('original', models.ImageField(upload_to='')),
+                ('small', models.ImageField(blank=True, null=True, upload_to='')),
+                ('medium', models.ImageField(blank=True, null=True, upload_to='')),
                 ('updated_at', models.DateTimeField(auto_now=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('user', models.ForeignKey(on_delete=models.CASCADE, to='auth.User')),

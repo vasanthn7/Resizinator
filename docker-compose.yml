@@ -38,3 +38,10 @@ services:
 
   redis:
     image: redis:7.2.4-alpine
+
+  nginx:
+    build: ./nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - web
