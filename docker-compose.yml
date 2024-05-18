@@ -3,11 +3,18 @@ services:
     build: .
     ports:
       - "8000:8000"
-    command: python manage.py runserver 0.0.0.0:8000
+    command: sh -c "python manage.py migrate && gunicorn --bind 0.0.0.0:8000 resizinator.wsgi:application"
     volumes:
       - .:/resizinator
     stdin_open: true
     tty: true
+    environment:
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+
   db:
     image: postgres:16
     environment:
@@ -19,3 +26,15 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     env_file:
       - .env
+
+  celery:
+    build: .
+    command: celery -A resizinator worker -l INFO
+    volumes:
+      - .:/resizinator
+    depends_on:
+      - web
+      - redis
+
+  redis:
+    image: redis:7.2.4-alpine
