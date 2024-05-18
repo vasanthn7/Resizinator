@@ -1,20 +1,29 @@
 from io import BytesIO
 
-import pytest
-
+import boto3
+from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase
+from moto import mock_aws
 import PIL.Image
+import pytest
 from rest_framework import status
+from rest_framework.test import APITestCase
+from unittest.mock import patch
 
 from image.models import Image
 
 
+@mock_aws
 @pytest.mark.django_db
-class TestImageViewSet(TestCase):
+class TestImageViewSet(APITestCase):
+    bucket_name = 'testbucket'
 
     def setUp(self):
-        self.image = Image.objects.create(original='test.jpg')
+        self.user = User.objects.create_user(username='test', password='test')
+        self.image = Image.objects.create(original='test.jpg', user=self.user)
+
+        s3 = boto3.resource("s3", region_name="us-east-1")
+        s3.create_bucket(Bucket=self.bucket_name)
 
     def temporary_image(self):
         bts = BytesIO()
@@ -24,31 +33,50 @@ class TestImageViewSet(TestCase):
 
     def test_list_image(self):
         url = '/image/'
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        self.client.force_authenticate(user=self.user)
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         assert response .data['count'] == 1
-        assert response.data['results'][0]['original'] == 'http://testserver/test.jpg'
+        assert response.data['results'][0]['original'] == 'https://testbucket.s3.amazonaws.com/test.jpg'
 
     def test_get_image(self):
         url = f'/image/{self.image.id}/'
         response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         assert response.data['id'] == self.image.id
-        assert response.data['original'] == 'http://testserver/test.jpg'
+        assert response.data['original'] == 'https://testbucket.s3.amazonaws.com/test.jpg'
 
-    def test_post_image(self):
+    @patch('image.tasks.resize_image.delay')
+    def test_create_image(self, mock_celery_task):
         url = '/image/'
         data = {'original': self.temporary_image()}
         response = self.client.post(url, data=data, format='multipart')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        assert response.data['original'] == 'http://testserver/images/test.jpg'
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-        # Clean up
+        self.client.force_authenticate(user=self.user)
+        data = {'original': self.temporary_image()}
+        response = self.client.post(url, data=data, format='multipart')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        assert response.data['original'] == 'https://testbucket.s3.amazonaws.com/test.jpg'
+
+        mock_celery_task.assert_called_once_with(response.data['id'])
         image = Image.objects.get(id=response.data['id'])
         image.delete()
 
     def test_delete_image(self):
         url = f'/image/{self.image.id}/'
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        self.client.force_authenticate(user=self.user)
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         assert Image.objects.count() == 0
