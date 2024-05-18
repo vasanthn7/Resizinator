@@ -20,6 +20,7 @@ class Migration(migrations.Migration):
                 ('medium', models.ImageField(blank=True, null=True, upload_to='images/')),
                 ('updated_at', models.DateTimeField(auto_now=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('user', models.ForeignKey(on_delete=models.CASCADE, to='auth.User')),
             ],
         ),
     ]

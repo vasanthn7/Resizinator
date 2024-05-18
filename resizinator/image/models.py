@@ -7,6 +7,7 @@ class Image(models.Model):
     medium = models.ImageField(upload_to='images/', blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE)
 
     def delete(self, *args, **kwargs):
         self.original.delete()

@@ -20,6 +20,7 @@ django-storages = "^1.14.3"
 ipdb = "^0.13.13"
 ruff = "^0.4.4"
 pytest-django = "^4.8.0"
+django-extensions = "^3.2.3"
 
 [build-system]
 requires = ["poetry-core"]

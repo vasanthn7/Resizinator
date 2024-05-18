@@ -6,6 +6,8 @@ services:
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/resizinator
+    stdin_open: true
+    tty: true
   db:
     image: postgres:16
     environment:
