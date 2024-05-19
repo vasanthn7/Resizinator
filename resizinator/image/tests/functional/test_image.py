@@ -41,7 +41,7 @@ class TestImageViewSet(APITestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         assert response .data['count'] == 1
-        assert response.data['results'][0]['original'] == 'https://testbucket.s3.amazonaws.com/test.jpg'
+        assert response.data['results'][0]['original'].startswith('https://testbucket.s3.amazonaws.com/test.jpg?')
 
     def test_get_image(self):
         url = f'/image/{self.image.id}/'
@@ -52,7 +52,7 @@ class TestImageViewSet(APITestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         assert response.data['id'] == self.image.id
-        assert response.data['original'] == 'https://testbucket.s3.amazonaws.com/test.jpg'
+        assert response.data['original'].startswith('https://testbucket.s3.amazonaws.com/test.jpg?')
 
     @patch('image.tasks.resize_image.delay')
     def test_create_image(self, mock_celery_task):
@@ -65,7 +65,7 @@ class TestImageViewSet(APITestCase):
         data = {'original': self.temporary_image()}
         response = self.client.post(url, data=data, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        assert response.data['original'] == 'https://testbucket.s3.amazonaws.com/test.jpg'
+        assert response.data['original'].startswith('https://testbucket.s3.amazonaws.com/test.jpg?')
 
         mock_celery_task.assert_called_once_with(response.data['id'])
         image = Image.objects.get(id=response.data['id'])
