@@ -189,8 +189,8 @@ LOGGING = {
         }
     },
     'loggers': {
-        "django": {
-            "handlers": ["handlers"],
+        "application": {
+            "handlers": ["application"],
             "propagate": True
         }
     }
