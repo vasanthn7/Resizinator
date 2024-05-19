@@ -8,7 +8,7 @@ class PublicMediaStorage(S3Boto3Storage):
 
 
 class PrivateMediaStorage(S3Boto3Storage):
-    location = "private"
+    location = ""
     default_acl = "private"
     file_overwrite = False
     custom_domain = False
