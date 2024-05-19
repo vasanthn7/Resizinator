@@ -6,6 +6,7 @@ services:
     command: sh -c "python manage.py migrate && python manage.py collectstatic --noinput && gunicorn --bind 0.0.0.0:8000 resizinator.wsgi:application"
     volumes:
       - .:/resizinator
+      - static_files:/resizinator/resizinator/staticfiles
     stdin_open: true
     tty: true
     environment:
@@ -47,8 +48,7 @@ services:
     depends_on:
       - web
     volumes:
-      - /var/www/static:/var/www/static
-      - /var/www/static:/var/www/media
+      - static_files:/var/www/static/
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
 
@@ -60,3 +60,6 @@ services:
     command: certonly --webroot --webroot-path=/var/www/certbot --email ${CERTBOT_EMAIL} --agree-tos --no-eff-email -d ${CERTBOT_DOMAIN}
     env_file:
       - .env
+
+volumes:
+  static_files:

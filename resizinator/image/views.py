@@ -13,7 +13,7 @@ class ImageViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        return Image.objects.filter(user=self.request.user)
+        return Image.objects.filter(user=self.request.user.id)
 
     def create(self, request):
         if 'original' not in request.data:
